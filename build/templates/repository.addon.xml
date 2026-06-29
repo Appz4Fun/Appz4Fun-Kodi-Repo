@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="{id}" name="{name}" version="{version}" provider-name="Appz4Fun">
+    <extension point="xbmc.addon.repository" name="{name}">
+        <dir>
+            <info compressed="false">{base_url}/{channel}/addons.xml</info>
+            <checksum>{base_url}/{channel}/addons.xml.md5</checksum>
+            <datadir zip="true">{base_url}/{channel}/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">{summary}</summary>
+        <description lang="en">{description}</description>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.png</fanart>
+        </assets>
+    </extension>
+</addon>
