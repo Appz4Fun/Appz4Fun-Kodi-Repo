@@ -3,6 +3,19 @@
 import re
 
 _CORE_RE = re.compile(r"^([0-9][0-9.]*)(?:[-~](.*))?$")
+_TOKEN_RE = re.compile(r"\d+|\D+")
+
+
+def _natural_key(part):
+    """Tokenize a pre-release part so digit runs compare numerically.
+
+    Splits 'beta10' into ('beta', 10) so it sorts after 'beta2' instead of
+    before it. Each token is a (kind, value) pair — kind 0 = text (str value),
+    kind 1 = number (int value) — which keeps tokens mutually comparable
+    (a differing kind decides the order before the values are ever compared).
+    """
+    return tuple((1, int(tok)) if tok.isdigit() else (0, tok)
+                 for tok in _TOKEN_RE.findall(part))
 
 
 def parse_version(value):
@@ -21,9 +34,9 @@ def parse_version(value):
             epoch, v = int(head), rest
     m = _CORE_RE.match(v)
     if not m:
-        return (epoch, (), 0, (v,))
+        return (epoch, (), 0, (_natural_key(v),))
     core = tuple(int(p) for p in m.group(1).split(".") if p != "")
     tag = m.group(2) or ""
     is_release = 1 if tag == "" else 0
-    tag_parts = tuple(tag.split(".")) if tag else ()
+    tag_parts = tuple(_natural_key(p) for p in tag.split(".")) if tag else ()
     return (epoch, core, is_release, tag_parts)
