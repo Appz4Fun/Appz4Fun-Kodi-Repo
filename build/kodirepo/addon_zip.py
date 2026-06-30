@@ -9,21 +9,34 @@ def read_addon(zip_path):
     """Return (addon_id, version, addon_xml_bytes, top_dir) for a Kodi addon zip.
 
     The id and version are taken from the addon.xml inside the zip — never
-    the filename. Raises ValueError if the zip is not a valid addon.
+    the filename. Raises ValueError if the zip is not a valid Kodi addon: a
+    corrupt archive, a missing or malformed addon.xml, a missing id/version,
+    or a top-level folder whose name does not match the addon id (Kodi
+    requires the add-on folder to be named exactly <id>). Callers treat every
+    ValueError as "skip this release", so all of these are reported as one.
     """
-    with zipfile.ZipFile(zip_path) as zf:
-        candidates = [n for n in zf.namelist()
-                      if n.count("/") == 1 and n.endswith("/addon.xml")]
-        if not candidates:
-            raise ValueError(f"{zip_path}: no top-level <dir>/addon.xml")
-        entry = sorted(candidates)[0]
-        data = zf.read(entry)
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            candidates = [n for n in zf.namelist()
+                          if n.count("/") == 1 and n.endswith("/addon.xml")]
+            if not candidates:
+                raise ValueError(f"{zip_path}: no top-level <dir>/addon.xml")
+            entry = sorted(candidates)[0]
+            data = zf.read(entry)
+    except zipfile.BadZipFile as exc:
+        raise ValueError(f"{zip_path}: not a readable zip ({exc})") from exc
     top_dir = entry.split("/", 1)[0]
-    root = ET.fromstring(data)
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError as exc:
+        raise ValueError(f"{zip_path}: malformed addon.xml ({exc})") from exc
     addon_id = root.get("id")
     version = root.get("version")
     if not addon_id or not version:
         raise ValueError(f"{zip_path}: addon.xml missing id/version")
+    if top_dir != addon_id:
+        raise ValueError(
+            f"{zip_path}: top folder {top_dir!r} does not match addon id {addon_id!r}")
     return addon_id, version, data, top_dir
 
 
