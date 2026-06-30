@@ -18,8 +18,21 @@ def _request(url, token=None):
 
 
 def list_releases(repo, token=None):
-    """Return the published+draft releases for owner/repo (newest first)."""
-    return json.loads(_request(f"{API}/repos/{repo}/releases?per_page=100", token))
+    """Return ALL published+draft releases for owner/repo (newest first).
+
+    Pages through the GitHub API (100 per page) until a short or empty page is
+    returned, so a source repo with more than 100 releases still contributes
+    every historical version — the repository promises to retain them all.
+    """
+    releases = []
+    page = 1
+    while True:
+        batch = json.loads(_request(
+            f"{API}/repos/{repo}/releases?per_page=100&page={page}", token))
+        releases.extend(batch)
+        if len(batch) < 100:
+            return releases
+        page += 1
 
 
 def download_asset(url, dest, token=None):
