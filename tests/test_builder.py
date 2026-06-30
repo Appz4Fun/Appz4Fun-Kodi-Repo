@@ -51,8 +51,8 @@ def test_build_channel_lays_out_tree_and_catalog(tmp_path):
     assert (chan / "plugin.video.sample" / "plugin.video.sample-1.1.0.zip").exists()
     # Repository addon zip emitted.
     assert (chan / "repository.appz4fun.stable" / "repository.appz4fun.stable-1.0.0.zip").exists()
-    # Artwork from the newest version extracted.
-    assert (chan / "plugin.video.sample" / "icon.png").exists()
+    # Artwork from the newest version extracted, keeping its declared path.
+    assert (chan / "plugin.video.sample" / "resources" / "icon.png").exists()
     # Catalog advertises the NEWEST member version + the repo addon.
     catalog = (chan / "addons.xml").read_text(encoding="utf-8")
     assert 'version="1.1.0"' in catalog

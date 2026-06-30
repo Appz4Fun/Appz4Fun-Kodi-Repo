@@ -11,12 +11,16 @@ def test_read_addon_returns_id_version_and_topdir(sample_addon_zip):
     assert b"<addon" in xml_bytes
 
 
-def test_extract_artwork_writes_icon_and_fanart(sample_addon_zip, tmp_path):
+def test_extract_artwork_preserves_declared_asset_paths(sample_addon_zip, tmp_path):
+    # Kodi resolves a repo add-on's pre-install artwork via the addon.xml
+    # <assets> paths under <datadir>/<id>/, so files must keep their declared
+    # relative path (resources/icon.png), not be flattened to icon.png.
     addon_id, version, xml_bytes, top_dir = read_addon(sample_addon_zip)
     dest = tmp_path / "out"
     extract_artwork(sample_addon_zip, top_dir, xml_bytes, str(dest))
-    assert (dest / "icon.png").read_bytes() == b"\x89PNG\r\n\x1a\nICON"
-    assert (dest / "fanart.jpg").read_bytes() == b"\xff\xd8\xff\xe0FANART"
+    assert (dest / "resources" / "icon.png").read_bytes() == b"\x89PNG\r\n\x1a\nICON"
+    assert (dest / "resources" / "fanart.jpg").read_bytes() == b"\xff\xd8\xff\xe0FANART"
+    assert not (dest / "icon.png").exists()  # not flattened
 
 
 def test_read_addon_rejects_zip_without_addon_xml(tmp_path):
