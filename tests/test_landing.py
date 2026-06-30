@@ -30,5 +30,8 @@ def test_render_index_lists_channels_and_links():
     assert "stable/repository.appz4fun.stable/repository.appz4fun.stable-1.0.0.zip" in html
     assert "plugin.video.nzbdav" in html
     assert "1.2.3" in html and "1.3.0-beta" in html
+    # Each add-on name links to its per-version page (served at <channel>/<id>/).
+    assert 'href="stable/plugin.video.nzbdav/"' in html
+    assert 'href="beta/plugin.video.nzbdav/"' in html
     # Template's literal CSS braces must not survive as {{ }}.
     assert "{{" not in html and "}}" not in html

@@ -65,6 +65,7 @@ def build(sources, out_root, cache_dir, assets_dir, token,
     """Build both channels into out_root and write the landing page."""
     repo_template = open(os.path.join(HERE, "templates", "repository.addon.xml"), encoding="utf-8").read()
     index_template = open(os.path.join(HERE, "templates", "index.html"), encoding="utf-8").read()
+    addon_template = open(os.path.join(HERE, "templates", "addon.html"), encoding="utf-8").read()
     base_url = sources["base_url"]
 
     resolved = _resolve(sources, cache_dir, token, list_releases, download)
@@ -78,7 +79,7 @@ def build(sources, out_root, cache_dir, assets_dir, token,
         summary = build_channel(
             channel=channel, base_url=base_url, addons=addons,
             repo_addon_cfg=cfg, assets_dir=assets_dir,
-            repo_template=repo_template, out_root=out_root,
+            repo_template=repo_template, addon_template=addon_template, out_root=out_root,
         )
         channels_summary[channel] = {
             "repo_id": cfg["id"], "repo_version": cfg["version"], "addons": summary,

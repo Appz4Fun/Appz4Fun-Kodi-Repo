@@ -17,7 +17,8 @@ def render_index(template, *, base_url, channels):
         repo_ver = info["repo_version"]
         link = f"{base}/{channel}/{repo_id}/{repo_id}-{repo_ver}.zip"
         rows = "\n".join(
-            f"<tr><td>{_html.escape(aid)}</td><td>{_html.escape(ver)}</td></tr>"
+            f'<tr><td><a href="{channel}/{_html.escape(aid)}/">{_html.escape(aid)}</a></td>'
+            f"<td>{_html.escape(ver)}</td></tr>"
             for aid, ver in sorted(info["addons"].items())
         )
         blocks.append(

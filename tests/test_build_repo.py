@@ -66,3 +66,8 @@ def test_build_produces_both_channels(tmp_path):
     assert (out / "beta" / "plugin.video.sample" / "plugin.video.sample-1.1.0-beta.zip").exists()
     assert (out / "stable" / "plugin.video.sample" / "plugin.video.sample-1.0.0.zip").exists()
     assert not (out / "stable" / "plugin.video.sample" / "plugin.video.sample-1.1.0-beta.zip").exists()
+    # Landing links to each add-on's page, and the per-addon page lists all versions.
+    assert 'href="stable/plugin.video.sample/"' in index
+    beta_page = (out / "beta" / "plugin.video.sample" / "index.html").read_text(encoding="utf-8")
+    assert 'href="plugin.video.sample-1.1.0-beta.zip"' in beta_page
+    assert 'href="plugin.video.sample-1.0.0.zip"' in beta_page
