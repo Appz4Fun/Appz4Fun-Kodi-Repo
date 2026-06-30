@@ -1,0 +1,67 @@
+name: Build & Deploy Kodi Repository
+
+on:
+  schedule:
+    - cron: "17 4 * * *"        # daily at 04:17 UTC
+  workflow_dispatch: {}
+  repository_dispatch:
+    types: [addon-released]      # instant trigger from source repo CI
+  push:
+    branches: [main]
+    paths:
+      - "sources.json"
+      - "build/**"
+      - "assets/**"
+      - ".github/workflows/sync.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+
+  build-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Restore asset cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/assets
+          key: kodi-assets-${{ github.run_id }}
+          restore-keys: |
+            kodi-assets-
+      - name: Build repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python build/build_repo.py
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
