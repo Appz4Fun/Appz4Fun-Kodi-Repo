@@ -2,15 +2,17 @@
 
 import os
 import shutil
+import xml.etree.ElementTree as ET
 
 from .addon_zip import extract_artwork
+from .addon_page import render_addon_page
 from .aggregate import addon_element, build_addons_xml, md5_hex
 from .repository_addon import render_addon_xml, build_zip
 from .select import newest_per_addon
 
 
 def build_channel(*, channel, base_url, addons, repo_addon_cfg,
-                  assets_dir, repo_template, out_root):
+                  assets_dir, repo_template, addon_template, out_root):
     """Write <out_root>/<channel>/ and return {addon_id: newest_version}.
 
     `addons` is one record per selected release/version, each with keys
@@ -21,16 +23,24 @@ def build_channel(*, channel, base_url, addons, repo_addon_cfg,
     chan_dir = os.path.join(out_root, channel)
 
     # 1. Retain every version's zip under <channel>/<id>/.
+    versions_by_id = {}
     for rec in addons:
         dst = os.path.join(chan_dir, rec["id"], f"{rec['id']}-{rec['version']}.zip")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copyfile(rec["zip_path"], dst)
+        versions_by_id.setdefault(rec["id"], []).append(rec["version"])
 
-    # 2. Newest per addon (for catalog + artwork).
+    # 2. Newest per addon (catalog + artwork) plus a per-addon page listing every
+    #    retained version (GitHub Pages serves no directory index of its own).
     newest = newest_per_addon(addons)
     for addon_id, rec in newest.items():
         extract_artwork(rec["zip_path"], rec["top_dir"], rec["addon_xml"],
                         os.path.join(chan_dir, addon_id))
+        name = ET.fromstring(rec["addon_xml"]).get("name") or addon_id
+        page = render_addon_page(addon_template, name=name, addon_id=addon_id,
+                                 channel=channel, versions=versions_by_id[addon_id])
+        with open(os.path.join(chan_dir, addon_id, "index.html"), "w", encoding="utf-8") as fh:
+            fh.write(page)
 
     # 3. Channel repository addon.
     repo_xml = render_addon_xml(

@@ -10,6 +10,11 @@ TEMPLATE = open(
     encoding="utf-8",
 ).read()
 
+ADDON_TEMPLATE = open(
+    os.path.join(os.path.dirname(__file__), "..", "build", "templates", "addon.html"),
+    encoding="utf-8",
+).read()
+
 REPO_CFG = {
     "id": "repository.appz4fun.stable",
     "name": "Appz4Fun Repository",
@@ -42,6 +47,7 @@ def test_build_channel_lays_out_tree_and_catalog(tmp_path):
         repo_addon_cfg=REPO_CFG,
         assets_dir=str(assets),
         repo_template=TEMPLATE,
+        addon_template=ADDON_TEMPLATE,
         out_root=str(out),
     )
 
@@ -62,3 +68,8 @@ def test_build_channel_lays_out_tree_and_catalog(tmp_path):
     assert (chan / "addons.xml.md5").read_text(encoding="utf-8") == md5_hex(catalog)
     # Summary reports newest member versions only.
     assert summary == {"plugin.video.sample": "1.1.0"}
+    # Per-addon page lists every retained version with download links + a home link.
+    page = (chan / "plugin.video.sample" / "index.html").read_text(encoding="utf-8")
+    assert 'href="plugin.video.sample-1.0.0.zip"' in page
+    assert 'href="plugin.video.sample-1.1.0.zip"' in page
+    assert 'href="../../"' in page
