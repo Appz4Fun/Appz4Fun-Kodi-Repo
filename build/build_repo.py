@@ -19,14 +19,14 @@ REPO_ADDONS = {
     "stable": {
         "id": "repository.appz4fun.stable",
         "name": "Appz4Fun Repository",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "Appz4Fun Kodi add-ons (stable)",
         "description": "Stable channel for Appz4Fun Kodi add-ons. Auto-updates.",
     },
     "beta": {
         "id": "repository.appz4fun.beta",
         "name": "Appz4Fun Repository (Beta)",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "Appz4Fun Kodi add-ons (beta)",
         "description": "Beta channel for Appz4Fun Kodi add-ons, including pre-releases.",
     },
