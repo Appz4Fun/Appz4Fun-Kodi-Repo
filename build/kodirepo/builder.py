@@ -53,6 +53,11 @@ def build_channel(*, channel, base_url, addons, repo_addon_cfg,
         f"{repo_addon_cfg['id']}-{repo_addon_cfg['version']}.zip",
     )
     build_zip(repo_addon_cfg["id"], repo_xml, assets_dir, repo_zip)
+    repo_dir = os.path.dirname(repo_zip)
+    for fname in ("icon.png", "fanart.png"):
+        src = os.path.join(assets_dir, fname)
+        if os.path.exists(src):
+            shutil.copyfile(src, os.path.join(repo_dir, fname))
 
     # 4. Catalog = newest member elements + repo addon element.
     elements = [addon_element(rec["addon_xml"]) for rec in newest.values()]

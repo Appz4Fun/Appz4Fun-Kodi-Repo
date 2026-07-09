@@ -59,12 +59,16 @@ def test_build_produces_both_channels(tmp_path):
     # Stable advertises its own repo addon; beta advertises the beta one.
     assert 'id="repository.appz4fun.stable"' in stable_catalog
     assert 'id="repository.appz4fun.beta"' in beta_catalog
+    assert 'id="repository.appz4fun.stable" name="Appz4Fun Repository" version="1.0.1"' in stable_catalog
+    assert 'id="repository.appz4fun.beta" name="Appz4Fun Repository (Beta)" version="1.0.1"' in beta_catalog
     # Landing page exists and links both channels.
     index = (out / "index.html").read_text(encoding="utf-8")
     assert "Stable channel" in index and "Beta channel" in index
     # Beta retained both versions; stable retained only the stable one.
     assert (out / "beta" / "plugin.video.sample" / "plugin.video.sample-1.1.0-beta.zip").exists()
     assert (out / "stable" / "plugin.video.sample" / "plugin.video.sample-1.0.0.zip").exists()
+    assert (out / "stable" / "repository.appz4fun.stable" / "repository.appz4fun.stable-1.0.1.zip").exists()
+    assert (out / "beta" / "repository.appz4fun.beta" / "repository.appz4fun.beta-1.0.1.zip").exists()
     assert not (out / "stable" / "plugin.video.sample" / "plugin.video.sample-1.1.0-beta.zip").exists()
     # Landing links to each add-on's page, and the per-addon page lists all versions.
     assert 'href="stable/plugin.video.sample/"' in index
