@@ -37,6 +37,28 @@ def test_download_asset_cached_downloads_on_miss(tmp_path, monkeypatch):
     assert os.path.basename(out) == "7.zip"
 
 
+def test_download_asset_cached_uses_api_url_with_token(tmp_path, monkeypatch):
+    # With a token the API asset URL must be used: browser_download_url is
+    # anonymous-only and cannot serve assets from private source repos.
+    cache = tmp_path / "cache"
+    asset = {"id": 8, "name": "x.zip",
+             "url": "https://api.github.com/repos/o/r/releases/assets/8",
+             "browser_download_url": "https://example/x.zip"}
+    calls = {}
+
+    def fake_download(url, dest, token=None):
+        calls["url"] = url
+        calls["token"] = token
+        with open(dest, "wb") as fh:
+            fh.write(b"downloaded")
+        return dest
+
+    monkeypatch.setattr(gh, "download_asset", fake_download)
+    gh.download_asset_cached(asset, str(cache), token="tok")
+    assert calls["url"] == "https://api.github.com/repos/o/r/releases/assets/8"
+    assert calls["token"] == "tok"
+
+
 def test_releases_first_page_url_and_empty(monkeypatch):
     captured = {}
 

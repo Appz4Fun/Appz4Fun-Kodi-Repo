@@ -1,6 +1,7 @@
 {
   "base_url": "https://appz4fun.github.io/Appz4Fun-Kodi-Repo",
   "repositories": [
-    "Appz4Fun/nzbdavkodi"
+    "Appz4Fun/nzbdavkodi",
+    "Appz4Fun/plugin.program.autocompletion-voice"
   ]
 }

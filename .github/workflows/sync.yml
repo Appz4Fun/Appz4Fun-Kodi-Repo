@@ -56,7 +56,11 @@ jobs:
             kodi-assets-
       - name: Build repository
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SOURCES_TOKEN (optional): fine-grained PAT with Contents: read on
+          # any PRIVATE source repos listed in sources.json. The default
+          # workflow token can only read public sources; without SOURCES_TOKEN
+          # a private source is skipped with a WARN rather than published.
+          GITHUB_TOKEN: ${{ secrets.SOURCES_TOKEN || secrets.GITHUB_TOKEN }}
         run: python build/build_repo.py
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

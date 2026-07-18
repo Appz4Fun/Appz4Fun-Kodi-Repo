@@ -4,6 +4,7 @@
 import json
 import os
 import sys
+import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,7 +40,15 @@ def _resolve(sources, cache_dir, token, list_releases, download):
     """Download each repo's release zips and read authoritative addon metadata."""
     resolved = []
     for repo in sources["repositories"]:
-        for rel in list_releases(repo, token):
+        # A repo the token can't see (private without SOURCES_TOKEN, or one
+        # that was renamed/deleted) answers 404 — skip it so one bad source
+        # can't take down the whole published repository.
+        try:
+            releases = list_releases(repo, token)
+        except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+            print(f"WARN {repo}: cannot list releases ({exc}); skipping repo")
+            continue
+        for rel in releases:
             if rel.get("draft"):
                 continue
             asset = pick_zip_asset(rel)

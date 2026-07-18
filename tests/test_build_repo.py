@@ -75,3 +75,50 @@ def test_build_produces_both_channels(tmp_path):
     beta_page = (out / "beta" / "plugin.video.sample" / "index.html").read_text(encoding="utf-8")
     assert 'href="plugin.video.sample-1.1.0-beta.zip"' in beta_page
     assert 'href="plugin.video.sample-1.0.0.zip"' in beta_page
+
+
+def test_build_skips_unlistable_repo(tmp_path, capsys):
+    # A source repo the token can't see (private, renamed, deleted) answers
+    # 404. That repo is skipped with a WARN; the others still publish.
+    import urllib.error
+
+    src = tmp_path / "src"
+    src.mkdir()
+    ok_zip = make_addon_zip(str(src), version="1.0.0")
+
+    releases = [
+        {"tag_name": "v1.0.0", "prerelease": False, "draft": False,
+         "assets": [{"id": 1, "name": "plugin.video.sample-1.0.0.zip",
+                     "browser_download_url": "https://x/1"}]},
+    ]
+
+    def fake_list_releases(repo, token=None):
+        if repo == "Appz4Fun/private-addon":
+            raise urllib.error.HTTPError(
+                f"https://api.github.com/repos/{repo}/releases",
+                404, "Not Found", None, None)
+        return releases
+
+    def fake_download(asset, cache_dir, token=None):
+        return ok_zip
+
+    assets = tmp_path / "assets"
+    assets.mkdir()
+    (assets / "icon.png").write_bytes(b"\x89PNGicon")
+    (assets / "fanart.png").write_bytes(b"\x89PNGfan")
+    out = tmp_path / "out"
+
+    build_repo.build(
+        sources={"base_url": "https://appz4fun.github.io/Appz4Fun-Kodi-Repo",
+                 "repositories": ["Appz4Fun/private-addon", "Appz4Fun/sample"]},
+        out_root=str(out),
+        cache_dir=str(tmp_path / "cache"),
+        assets_dir=str(assets),
+        token=None,
+        list_releases=fake_list_releases,
+        download=fake_download,
+    )
+
+    assert "WARN Appz4Fun/private-addon: cannot list releases" in capsys.readouterr().out
+    stable_catalog = (out / "stable" / "addons.xml").read_text(encoding="utf-8")
+    assert 'version="1.0.0"' in stable_catalog
