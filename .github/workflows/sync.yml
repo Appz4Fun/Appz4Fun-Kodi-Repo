@@ -24,6 +24,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # GitHub turns off a scheduled workflow after 60 days without repository
+  # activity, and a turned-off workflow also ignores the addon-released
+  # repository_dispatch, so new add-on releases would silently stop
+  # publishing. Re-enabling it on every scheduled run resets that timer.
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Reset the inactivity timer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/sync.yml/enable"
+
   test:
     runs-on: ubuntu-latest
     steps:
